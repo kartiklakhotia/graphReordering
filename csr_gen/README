@@ -1,0 +1,7 @@
+convert edge list text file to csr binary file to run 
+example algorithms
+
+Steps to run:
+1. make
+2. ./a.out <inputGraphFileName> <outputFileName>
+

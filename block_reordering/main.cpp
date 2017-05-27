@@ -15,6 +15,9 @@
 
 using namespace std;
 
+//defaults
+unsigned int CLSize = 20;
+unsigned int CACHE_SIZE = 100000;
 
 
 void merge(unsigned int*, unsigned int*, unsigned int, unsigned int, unsigned int);
@@ -23,21 +26,23 @@ void mergeSort (unsigned int*, unsigned int*, unsigned int, unsigned int);
 
 int main(int argc, char** argv)
 {
-
-    // 2 files for 2 different CSR representations
-    if (argc != 5)
+    
+    if (argc == 5)
     {
-        printf("Usage : %s <cacheLineSize> <cacheCapacity> <inputFile1> <outputFile>\n", argv[0]);
+        CLSize = atoi(argv[1]);
+        CACHE_SIZE = atoi(argv[2]);
+    }
+    else if (argc != 3)
+    {
+        printf("Usage : %s <cacheLineSize>(optional) <cacheCapacity>(optional) <inputFile1> <outputFile> \n", argv[0]);
         exit(1);
     }
 
     // graph objects
-    // G1 -> EI has destination vertices
-    // G2 -> EI has source vertices
     graph G1, G2;
 
     // read csr file
-    if (read_csr(argv[3], &G1)==-1)
+    if (read_csr(argv[argc-2], &G1)==-1)
         exit(1);
 
 #ifdef DEBUG
@@ -47,8 +52,6 @@ int main(int argc, char** argv)
 
     unsigned int degThresh = (G1.numVertex) + 1;
 //    printGraph(&G1);
-    unsigned int CLSize = atoi(argv[1]);
-    unsigned int CACHE_SIZE = atoi(argv[2]);
     
     graph compG;
     compG.numVertex = (G1.numVertex-1)/CLSize + 1;
@@ -289,7 +292,7 @@ int main(int argc, char** argv)
     delete[] cachePresence;
     delete[] isPlaced;
 
-    if (read_csr(argv[3], &G1)==-1)
+    if (read_csr(argv[argc-2], &G1)==-1)
         exit(1);
 
 
@@ -344,10 +347,9 @@ int main(int argc, char** argv)
 #endif
 
 
-
     write_csr(argv[argc-1], &G2);
-   // FILE* fMap = fopen("fMap.bin", "wb");
-   // fwrite(newNodeId, sizeof(unsigned int), G2.numVertex, fMap);
+//    FILE* fMap = fopen("fMap.bin", "wb");
+//    fwrite(newNodeId, sizeof(unsigned int), G2.numVertex, fMap);
 //    fclose(fMap);
 
     freeMem(&G1);

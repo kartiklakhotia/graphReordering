@@ -1,53 +1,116 @@
 #include "graph.h"
 
-int read_csr (char* filename, graph* G)
+using namespace std;
+
+int read_edge_list (char* filename, std::vector<unsigned int>& src, std::vector<unsigned int>& dst)
 {
-    FILE* graphFile = fopen(filename, "rb");
-    if (graphFile == NULL)
+    unsigned int numEdgesRead = 0;
+
+    FILE* fp = fopen (filename, "r");
+    if (fp == NULL)
     {
         fputs("file error", stderr);
         return -1;
     }
-    fread (&(G->numVertex), sizeof(unsigned int), 1, graphFile);
-    fread (&(G->numEdges), sizeof(unsigned int), 1, graphFile);
 
+    unsigned int srcVal = 0;
+    unsigned int dstVal = 0;
 
-    G->VI = new unsigned int[G->numVertex];
+    int numVertex = 0;
 
-    fread (G->VI, sizeof(unsigned int), G->numVertex, graphFile);
-    if (feof(graphFile))
+    while(!feof(fp))
     {
-        delete[] G->VI;
-        printf("unexpected end of file while reading vertices\n");
-        return -1;
-    }
-    else if (ferror(graphFile))
-    {
-        delete[] G->VI;
-        printf("error reading file\n");
-        return -1;
+        if(fscanf(fp, "%d", &srcVal) <= 0)
+            break;
+        fscanf(fp, "%d", &dstVal);
+        numVertex = (srcVal > numVertex) ? srcVal : numVertex;
+        numVertex = (dstVal > numVertex) ? dstVal : numVertex;
+        if (srcVal != dstVal)
+        {
+            src.push_back(srcVal);
+            dst.push_back(dstVal);
+            numEdgesRead++;
+        }
     }
 
-    G->EI = new unsigned int[G->numEdges];
-    fread (G->EI, sizeof(unsigned int), G->numEdges, graphFile);
-    if (feof(graphFile))
-    {
-        delete[] G->VI;
-        delete[] G->EI;
-        printf("unexpected end of file while reading edges\n");
-        return -1;
-    }
-    else if (ferror(graphFile))
-    {
-        delete[] G->VI;
-        delete[] G->EI;
-        printf("error reading file\n");
-        return -1;
-    }
-    fclose(graphFile);
-    return 1;
+    fclose(fp);
+    numVertex++;
+
+    return numVertex;
 }
 
+unsigned int filter (std::vector<unsigned int>& src, std::vector<unsigned int>& dst, unsigned int numVertex, unsigned int numEdgesRead)
+{
+    bool* exists = new bool [numVertex]();
+    for (unsigned int i=0; i<numEdgesRead; i++)
+    {
+        exists[src[i]]=true;
+        exists[dst[i]]=true;
+    }
+
+    unsigned int* vertexMap = new unsigned int [numVertex]();
+    unsigned int actualVertices = 0;
+    for (unsigned int i=0; i<numVertex; i++)
+    {
+        if (exists[i])
+            vertexMap[i] = actualVertices++;
+    }
+    
+    for (unsigned int i=0; i<numEdgesRead; i++)
+    {
+        src[i] = vertexMap[src[i]];
+        dst[i] = vertexMap[dst[i]];
+    }
+    
+    delete[] exists;
+    delete[] vertexMap;
+    
+    return actualVertices;
+}
+
+void csr_convert(std::vector<unsigned int>& src, std::vector<unsigned int>& dst, graph* G)
+{
+    G->VI = new unsigned int [G->numVertex+1]();
+    G->EI = new unsigned int [G->numEdges]();  
+
+    unsigned int* inDeg = new unsigned int [G->numVertex]();
+    for (unsigned int i=0; i<G->numEdges; i++)
+        inDeg[src[i]]++;
+    
+    for (unsigned int i=1; i<G->numVertex+1; i++)
+        G->VI[i] = G->VI[i-1] + inDeg[i-1];
+
+    for (unsigned int i=0; i<G->numVertex; i++)
+        inDeg[i] = 0;
+
+    for (unsigned int i=0; i<G->numEdges; i++)
+    {
+        G->EI[G->VI[src[i]] + inDeg[src[i]]] = dst[i];
+        inDeg[src[i]]++;
+    }
+
+    delete[] inDeg;
+}
+
+int read_csr (char* filename, graph* G)
+{
+    std::vector<unsigned int> src;
+    std::vector<unsigned int> dst; 
+
+    int numVertex = read_edge_list (filename, src, dst);
+    if (numVertex < 0)
+        return -1;
+
+    G->numEdges = src.size();
+
+    G->numVertex = filter(src, dst, (unsigned int)numVertex, G->numEdges);
+
+
+    csr_convert(src, dst, G);
+
+
+    return 1;
+}
 
 void printGraph (graph* G)
 {

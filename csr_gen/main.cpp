@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -15,54 +16,49 @@ using namespace std;
 
 
 
-
 int main(int argc, char** argv)
 {
 
     // 2 files for 2 different CSR representations
-    if (argc != 5)
+    if (argc != 3)
     {
-        printf("Usage : %s <numVertices> <numEdges> <inputFile1> <outputFile>\n", argv[0]);
+        printf("Usage : %s <inputFile1> <outputFile>\n", argv[0]);
         exit(1);
     }
 
-    int numVertex = atoi(argv[1]);
-    int numEdges = atoi(argv[2]);
     // graph objects
-    // G1 -> EI has destination vertices
-    // G2 -> EI has source vertices
-    int* src = new int [numEdges];
-    int* dst = new int [numEdges];
+    // edge list
+    std::vector<int> src;
+    std::vector<int> dst;
 
     unsigned int numEdgesRead = 0;
 
-    FILE* fp = fopen (argv[3], "r");
+    FILE* fp = fopen (argv[1], "r");
     if (fp == NULL)
     {
         fputs("file error", stderr);
         return -1;
     }
 
-    int id;
-//    fscanf(fp, "%d", &id);
-//    src[numEdgesRead] = id;
-//    fscanf(fp, "%d", &id);
-//    dst[numEdgesRead++] = id;
-
-
-//    char buffer[100];
-//    fgets(buffer, 100, fp);
-    while(!feof(fp) && (numEdgesRead < numEdges))
+    int srcVal, dstVal;
+    int numVertex = 0;
+    while(!feof(fp))
     {
-        fscanf(fp, "%d", &id);
-        src[numEdgesRead] = id;
-        fscanf(fp, "%d", &id);
-        if (id != src[numEdgesRead])
-            dst[numEdgesRead++] = id;
+        if(fscanf(fp, "%d", &srcVal) <= 0)
+            break;
+        fscanf(fp, "%d", &dstVal);
+        numVertex = (srcVal > numVertex) ? srcVal : numVertex;
+        numVertex = (dstVal > numVertex) ? dstVal : numVertex;
+        if (srcVal != dstVal)
+        {
+            src.push_back(srcVal);
+            dst.push_back(dstVal);
+            numEdgesRead++;
+        }
     }
     fclose(fp);
-    numEdgesRead--;
 
+    numVertex++;
 
     int* inDeg = new int [numVertex]();
 
@@ -89,19 +85,12 @@ int main(int argc, char** argv)
         inDeg[src[i]]++;
     }
 
-    // another csr that stores edges in reverse direction
-    // to access children of a node
-    write_csr(argv[4], &G1); 
+    write_csr(argv[2], &G1); 
 
 
-//    write_csr(argv[argc-1], &G2);
-    delete[] src;
-    delete[] dst;
     delete[] inDeg;
     freeMem(&G1);
-//    freeMem(&G2);
 
     return 0;
 }
-
 
