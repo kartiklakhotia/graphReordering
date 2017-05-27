@@ -30,15 +30,12 @@ int main(int argc, char** argv)
     }
 
     // graph objects
-    // G1 -> EI has destination vertices
-    // G2 -> EI has source vertices
     graph G1, G2;
 
     // read csr file
     if (read_csr(argv[1], &G1)==-1)
         exit(1);
 
-//    printGraph(&G1);
     unsigned int degThresh = sqrt(G1.numVertex);
 //    unsigned int degThresh = G1.numVertex + 1;
 
@@ -54,7 +51,6 @@ int main(int argc, char** argv)
     // another csr that stores edges in reverse direction
     // to access children of a node
     createReverseCSR(&G1, &G2);
-//    printGraph(&G2);
 
     unsigned int* outDeg = new unsigned int [G1.numVertex];
     for (unsigned int i=0; i<G2.numVertex-1; i++)
@@ -68,7 +64,7 @@ int main(int argc, char** argv)
     unsigned int maxCost = 0;
     for (unsigned int i=0; i<G1.numVertex; i++)
     {
-        unsigned int endId = (i==G1.numVertex-1) ? G1.numEdges : G1.VI[i+1];
+        unsigned int endId = G1.VI[i+1];
         for (unsigned int j=G1.VI[i]; j<endId; j++)
         {
             if (outDeg[G1.EI[j]] <= degThresh)
@@ -243,7 +239,7 @@ int main(int argc, char** argv)
     {
         unsigned int prevNodeId = nodeId[i-1];
         unsigned int parentStartId = G1.VI[prevNodeId]; 
-        unsigned int parentEndId = (prevNodeId == G1.numVertex-1) ? G1.numEdges : G1.VI[prevNodeId+1];
+        unsigned int parentEndId = G1.VI[prevNodeId+1];
         G2.VI[i] = G2.VI[i-1] + (parentEndId - parentStartId);
         unsigned int tempId = 0;
         for (unsigned int j=G2.VI[i-1]; j<G2.VI[i]; j++)
