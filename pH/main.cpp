@@ -12,7 +12,7 @@
 #define DEBUG 1
 #undef DEBUG
 
-#define CACHE_SIZE 100000
+unsigned int CACHE_SIZE = 100000;
 
 using namespace std;
 
@@ -22,10 +22,13 @@ void dumpNewOrder (graph*, unsigned int*, char*);
 int main(int argc, char** argv)
 {
 
-    // 2 files for 2 different CSR representations
-    if (argc != 3)
+    if (argc == 4)
     {
-        printf("Usage : %s <inputFile1> <outputFile>\n", argv[0]);
+        CACHE_SIZE = atoi(argv[1]);
+    }
+    else if (argc != 3)
+    {
+        printf("Usage : %s <cacheCapacity(optional)> <inputFile1> <outputFile>\n", argv[0]);
         exit(1);
     }
 
@@ -33,7 +36,7 @@ int main(int argc, char** argv)
     graph G1, G2;
 
     // read csr file
-    if (read_csr(argv[1], &G1)==-1)
+    if (read_csr(argv[argc-2], &G1)==-1)
         exit(1);
 
     unsigned int degThresh = sqrt(G1.numVertex);
@@ -230,7 +233,7 @@ int main(int argc, char** argv)
     printf("reordering computed\n");
 #endif
 
-	dumpNewOrder(&G1, nodeMap, "newOrder.bin");
+	dumpNewOrder(&G1, nodeMap, (char *)"newOrder.bin");
 
     //// apply the new order to existing graph 
     //// new reordered graph

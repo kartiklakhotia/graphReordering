@@ -4,14 +4,14 @@ LDFLAGS = -static -O3 -m64
 SOURCES = main.cpp graph.cpp sort.cpp cachefunc.cpp 
 OBJECTS = $(SOURCES:.cpp=.o)
 
-all: $(SOURCES) h7200
+all: $(SOURCES) ph
 
-h7200 : $(OBJECTS)
+ph : $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
 .cpp.o : 
 	$(CC) $(CPPFLAGS) $< -o $@
 
 clean:
-	rm -f *.o h7200
+	rm -f *.o *.bin ph
 
