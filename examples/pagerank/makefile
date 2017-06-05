@@ -1,18 +1,28 @@
 CC      = g++
 CPPFLAGS= -O3 -c -std=c++11
-LIBS = -lrt
+LIBS = -lrt -lpthread
 LDFLAGS = -static -O3 -m64
-SOURCES = main.cpp graph.cpp sort.cpp 
-OBJECTS = $(SOURCES:.cpp=.o)
+SOURCES_ST = prST.cpp graph.cpp sort.cpp 
+OBJECTS_ST = $(SOURCES_ST:.cpp=.o)
 
-all: $(SOURCES) a.out
+SOURCES_MT = prMT.cpp graph.cpp sort.cpp 
+OBJECTS_MT = $(SOURCES_MT:.cpp=.o)
 
-a.out : $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@ $(LIBS)
+all: ST MT
+
+ST: $(SOURCES_ST) prST
+
+prST : $(OBJECTS_ST)
+	$(CC) $(LDFLAGS) $(OBJECTS_ST) -o $@ $(LIBS)
+
+MT: $(SOURCES_MT) prMT
+
+prMT : $(OBJECTS_MT)
+	$(CC) $(LDFLAGS) $(OBJECTS_MT) -o $@ $(LIBS)
 
 .cpp.o : 
 	$(CC) $(CPPFLAGS) $< -o $@
 
 clean:
-	rm -f a.out *.o
+	rm -f prST prMT *.o
 
